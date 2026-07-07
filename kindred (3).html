@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f6efe2">
+<title>Kindred · a quiz to find your person</title>
+<meta property="og:title" content="Kindred · a quiz to find your person">
+<meta property="og:description" content="24-ish questions. no wrong answers. at the party, find out who answered most like you.">
+<meta property="og:type" content="website">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><polygon points="16,2 20,11 30,11 22,17 25,27 16,21 7,27 10,17 2,11 12,11" fill="%23f7a6b8" stroke="%233f3a30" stroke-width="1.5"/></svg>'>
+<link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Patrick Hand', cursive; overflow-x: hidden;
+         background-image: radial-gradient(rgba(160,140,100,0.07) 1px, transparent 1px); background-size: 6px 6px; }
+  button { -webkit-appearance: none; appearance: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  /* each new page settles into place */
+  .card, .cpage { animation: placeCard 0.32s ease-out both; }
+  @keyframes placeCard { from { opacity: 0; transform: rotate(2deg) translateY(14px) scale(1.02); } }
+  /* progress as little paper squares filling in */
+  .progrow { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: 20px; }
+  .pg { width: 9px; height: 9px; border: 1.5px dashed var(--fainter); transform: rotate(4deg); }
+  .pg:nth-child(2n) { transform: rotate(-5deg); }
+  .pg.done { border: none; }
+  /* pen check on a chosen scrap (not on the tight likert squares) */
+  .opt.sel::after { content: " \2713"; color: var(--dark); }
+  .opts.likert .opt.sel::after { content: ""; }
+  /* the scissor snips as it travels */
+  .scissor svg { display: block; }
+  .scissor .b1 { transform-origin: 11px 13px; animation: snipA 0.16s linear infinite alternate; }
+  .scissor .b2 { transform-origin: 11px 13px; animation: snipB 0.16s linear infinite alternate; }
+  @keyframes snipA { from { transform: rotate(8deg); } to { transform: rotate(-5deg); } }
+  @keyframes snipB { from { transform: rotate(-8deg); } to { transform: rotate(5deg); } }
+  .c-date { text-align: center; font-family: 'Gochi Hand', cursive; color: var(--soft); font-size: 16px; margin-top: 2px; }
+  :root {
+    --paper: #f6efe2; --card: #fffef9; --ink: #38322a; --soft: #8a8069; --fainter: #b0a58c;
+    --pink: #f7a6b8; --yellow: #ffd97a; --teal: #9fd8c9; --lilac: #b7b5ea;
+    --peach: #f9c489; --green: #a8d48a; --dark: #3f3a30;
+    --sc1: #fde3a7; --sc2: #cfe8de; --sc3: #f6cfd8; --sc4: #d9d7f2;
+  }
+  .wrap { max-width: 620px; margin: 0 auto; padding: 26px 16px 80px; }
+
+  .banner { background: var(--sc3); border: 2px dashed var(--dark); padding: 8px 14px; font-size: 15px;
+            color: var(--dark); transform: rotate(-0.5deg); margin-bottom: 22px; text-align: center; }
+
+  /* cut-out letter title */
+  .titleline { text-align: center; margin: 14px 0 6px; line-height: 1.5; }
+  .cut { display: inline-block; font-family: 'Gochi Hand', cursive; font-size: 38px; padding: 1px 10px; margin: 0 2px; color: var(--ink); }
+  .cutspace { display: inline-block; width: 14px; }
+  .subline { text-align: center; color: var(--soft); font-size: 17px; }
+  .countline { text-align: center; color: var(--fainter); font-size: 15px; margin-top: 4px; }
+
+  /* the card */
+  .card { position: relative; background: var(--card); padding: 42px 30px 32px; transform: rotate(0.6deg);
+          box-shadow: 0 8px 18px rgba(80,60,30,0.18); margin-top: 30px; }
+  .card.tilt2 { transform: rotate(-0.7deg); }
+  .corner { position: absolute; width: 0; height: 0; border: 15px solid transparent; }
+  .corner.tl { top: 0; left: 0; border-top-color: var(--dark); border-left-color: var(--dark); }
+  .corner.tr { top: 0; right: 0; border-top-color: var(--dark); border-right-color: var(--dark); }
+  .corner.bl { bottom: 0; left: 0; border-bottom-color: var(--dark); border-left-color: var(--dark); }
+  .corner.br { bottom: 0; right: 0; border-bottom-color: var(--dark); border-right-color: var(--dark); }
+  .torn { position: absolute; top: -12px; left: -20px; width: 120px; height: 38px; background: #f2a48e;
+          transform: rotate(-7deg); pointer-events: none;
+          clip-path: polygon(0 22%, 7% 8%, 17% 18%, 28% 4%, 40% 15%, 52% 3%, 63% 14%, 75% 5%, 87% 16%, 100% 8%, 100% 84%, 90% 96%, 78% 84%, 64% 97%, 51% 86%, 37% 98%, 24% 85%, 11% 95%, 0 82%); }
+  .torn.t2 { left: auto; right: -16px; top: auto; bottom: -12px; background: var(--teal); transform: rotate(5deg); width: 90px; height: 30px; }
+
+  .qnum { font-size: 13px; letter-spacing: 0.2em; color: var(--fainter); text-transform: uppercase; }
+  .q { font-family: 'Gochi Hand', cursive; font-size: 29px; color: var(--ink); line-height: 1.2; margin-top: 8px; }
+
+  /* answers as paper scraps */
+  .opts { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+  .opts.either { flex-direction: row; flex-wrap: wrap; }
+  .opts.either .opt { flex: 1 1 40%; text-align: center; }
+  .opts.likert { flex-direction: row; gap: 8px; }
+  .opts.likert .opt { flex: 1; text-align: center; padding: 12px 4px; }
+  .opt { font-family: 'Gochi Hand', cursive; font-size: 19px; padding: 10px 16px; color: var(--ink);
+         border: none; cursor: pointer; text-align: left;
+         clip-path: polygon(0 12%, 4% 0, 96% 4%, 100% 16%, 99% 88%, 95% 100%, 5% 97%, 0 86%);
+         transition: transform 0.08s ease; }
+  .opt:nth-child(4n+1) { background: var(--sc1); transform: rotate(-0.7deg); }
+  .opt:nth-child(4n+2) { background: var(--sc2); transform: rotate(0.6deg); }
+  .opt:nth-child(4n+3) { background: var(--sc3); transform: rotate(-0.4deg); }
+  .opt:nth-child(4n+4) { background: var(--sc4); transform: rotate(0.8deg); }
+  @media (hover: hover) and (pointer: fine) { .opt:hover { transform: rotate(0deg) translateY(-1px); } }
+  .opt:focus-visible { outline: 3px solid var(--dark); outline-offset: 2px; }
+  .opt.sel { outline: 3px solid var(--dark); outline-offset: -3px; transform: scale(0.985); }
+  /* choreography: lift the chosen scrap, scissor the rest, draw glue, splat down */
+  @keyframes pickup2 { to { transform: translateY(-30px) scale(1.07) rotate(0deg); box-shadow: 0 16px 22px rgba(80,60,30,0.32); } }
+  .opt.lift2 { animation: pickup2 0.28s ease-out both; position: relative; z-index: 5; }
+  @keyframes splatDown {
+    0%   { transform: translateY(-30px) scale(1.07) rotate(0deg); box-shadow: 0 16px 22px rgba(80,60,30,0.32); }
+    62%  { transform: translateY(1px) scale(0.92) rotate(-0.5deg); box-shadow: none; }
+    100% { transform: scale(0.985) rotate(0deg); box-shadow: none; }
+  }
+  .opt.splat { animation: splatDown 0.26s ease-in both; position: relative; z-index: 5;
+               outline: 3px solid var(--dark); outline-offset: -3px; }
+  .scissor { position: fixed; z-index: 6; font-size: 22px; pointer-events: none; animation: snipV 0.4s linear both; }
+  @keyframes snipV { 0% { transform: translateY(0) rotate(var(--rot)); opacity: 1; }
+                     85% { opacity: 1; }
+                     100% { transform: translateY(var(--dt)) rotate(var(--rot)); opacity: 0; } }
+  .cuthalf { pointer-events: none; }
+  .cuthalf.lefthalf { animation: cutFallL 0.6s ease-in both; }
+  .cuthalf.righthalf { animation: cutFallR 0.6s ease-in both; }
+  @keyframes cutFallL { to { opacity: 0; transform: translate(-20px, 36px) rotate(-11deg); } }
+  @keyframes cutFallR { to { opacity: 0; transform: translate(16px, 40px) rotate(9deg); } }
+  .glue-svg { position: fixed; z-index: 2; pointer-events: none; }
+  .glob { position: fixed; z-index: 6; background: #e9eff6; border: 1px solid #ccd8e3; pointer-events: none;
+          border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%; animation: globout 0.55s ease-out both; }
+  @keyframes globout { 0% { opacity: 0; transform: translate(0,0) scale(0.5); }
+                       30% { opacity: 0.95; }
+                       100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1); } }
+  /* cut-out shapes scattered around cards and the final collage */
+  .deco { position: absolute; pointer-events: none; }
+  .cdeco { display: inline-flex; align-items: center; animation: dropIn 0.45s ease-out both; pointer-events: none; }
+  .deco-star { clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+  .deco-dot { border-radius: 50%; }
+  .deco-tri { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .deco-zig { clip-path: polygon(0 30%, 12% 0, 25% 30%, 37% 0, 50% 30%, 62% 0, 75% 30%, 87% 0, 100% 30%, 100% 70%, 87% 100%, 75% 70%, 62% 100%, 50% 70%, 37% 100%, 25% 70%, 12% 100%, 0 70%); }
+  .cpage { position: relative; background: var(--card); padding: 34px 20px 30px; transform: rotate(-0.4deg);
+           box-shadow: 0 8px 18px rgba(80,60,30,0.18); margin-top: 22px; }
+  .seal-abs { position: absolute; top: -28px; right: -12px; width: 96px; height: 96px; font-size: 19px;
+              margin: 0; z-index: 3; }
+  /* the finished collage */
+  .collage { display: flex; flex-wrap: wrap; gap: 12px 10px; justify-content: center; margin-top: 26px; }
+  .c-scrap { font-family: 'Gochi Hand', cursive; font-size: 15.5px; color: var(--ink); padding: 8px 14px;
+             max-width: 240px; animation: dropIn 0.45s ease-out both;
+             clip-path: polygon(0 12%, 4% 0, 96% 4%, 100% 16%, 99% 88%, 95% 100%, 5% 97%, 0 86%); }
+  .c-scrap:nth-child(6n+1) { background: var(--sc1); transform: rotate(-2deg); }
+  .c-scrap:nth-child(6n+2) { background: var(--sc2); transform: rotate(1.6deg); }
+  .c-scrap:nth-child(6n+3) { background: var(--sc3); transform: rotate(-1.2deg); }
+  .c-scrap:nth-child(6n+4) { background: var(--sc4); transform: rotate(2.2deg); }
+  .c-scrap:nth-child(6n+5) { background: #ffe9c9; transform: rotate(-1.8deg); }
+  .c-scrap:nth-child(6n+6) { background: #dcedd2; transform: rotate(1.1deg); }
+  .c-q { display: block; font-family: 'Patrick Hand', cursive; font-size: 10.5px; color: rgba(56,50,42,0.55);
+         letter-spacing: 0.02em; margin-bottom: 1px; }
+  @keyframes dropIn { from { opacity: 0; transform: translateY(-16px) rotate(7deg) scale(1.1); }
+                      to   { opacity: 1; } }
+  .titleline.small .cut { font-size: 26px; padding: 1px 7px; }
+  .anchors { display: flex; justify-content: space-between; color: var(--soft); font-size: 15px; margin-top: 8px; padding: 0 2px; }
+
+  .prog { text-align: center; margin-top: 22px; font-size: 15px; color: var(--soft); }
+  .backlink { display: inline-block; margin-top: 18px; font-size: 16px; color: var(--soft); background: none;
+              border: none; cursor: pointer; font-family: 'Patrick Hand', cursive; border-bottom: 1.5px dashed var(--soft); }
+
+  .next { display: block; margin: 24px auto 0; font-family: 'Gochi Hand', cursive; font-size: 20px; background: var(--dark);
+          color: var(--paper); border: none; padding: 9px 26px; transform: rotate(-1deg); cursor: pointer;
+          clip-path: polygon(2% 10%, 98% 0, 100% 90%, 0 100%); }
+  @media (hover: hover) and (pointer: fine) { .next:hover { transform: rotate(0deg); } }
+  .next:focus-visible { outline: 3px solid var(--dark); outline-offset: 3px; }
+  .next[disabled] { opacity: 0.45; cursor: default; }
+
+  /* name page */
+  .namebox { width: 100%; font-family: 'Gochi Hand', cursive; font-size: 27px; color: var(--ink);
+             background: transparent; border: none; border-bottom: 2.5px dashed var(--fainter);
+             padding: 8px 4px; margin-top: 18px; }
+  .namebox:focus { outline: none; border-bottom-color: var(--dark); }
+  .hintline { color: var(--soft); font-size: 15px; margin-top: 10px; }
+
+  /* review page */
+  .rev-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 2px;
+             border-bottom: 1.5px dashed #e5dcc6; cursor: pointer; }
+  @media (hover: hover) and (pointer: fine) { .rev-row:hover { background: #fbf6ea; } }
+  .rev-q { font-size: 15.5px; color: var(--soft); flex: 1; }
+  .rev-a { font-family: 'Gochi Hand', cursive; font-size: 16.5px; padding: 3px 12px; white-space: nowrap;
+           clip-path: polygon(0 12%, 4% 0, 96% 4%, 100% 16%, 99% 88%, 95% 100%, 5% 97%, 0 86%); }
+  .rev-row:nth-child(4n+1) .rev-a { background: var(--sc1); }
+  .rev-row:nth-child(4n+2) .rev-a { background: var(--sc2); }
+  .rev-row:nth-child(4n+3) .rev-a { background: var(--sc3); }
+  .rev-row:nth-child(4n+4) .rev-a { background: var(--sc4); }
+  .errscrap { background: var(--sc3); border: 2px solid var(--dark); padding: 10px 14px; margin-top: 18px;
+              font-size: 16px; transform: rotate(-0.6deg); }
+
+  /* sealed page */
+  .seal-sticker { width: 120px; height: 120px; border-radius: 50%; background: var(--pink);
+                  border: 3px dashed var(--dark); margin: 24px auto 10px; display: flex; align-items: center;
+                  justify-content: center; font-family: 'Gochi Hand'; font-size: 24px; color: var(--dark);
+                  transform: rotate(-8deg); }
+  .center { text-align: center; }
+
+  /* oracle roster */
+  table.roster { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 16px; }
+  table.roster td, table.roster th { padding: 7px 8px; text-align: left; border-bottom: 1.5px dashed #e5dcc6; }
+  table.roster th { font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--fainter); font-weight: 400; }
+  .dupe { color: #b3532f; font-size: 13px; }
+
+  .footer { text-align: center; color: var(--fainter); font-size: 14px; margin-top: 44px; }
+  @media (max-width: 480px) {
+    .cut { font-size: 30px; padding: 1px 7px; }
+    .card { padding: 36px 20px 26px; }
+    .q { font-size: 25px; }
+    .opts.likert { gap: 6px; }
+    .opts.likert .opt { font-size: 17px; padding: 11px 2px; }
+    .cpage { padding: 30px 14px 24px; }
+    .seal-abs { width: 78px; height: 78px; font-size: 15px; top: -20px; right: -6px; }
+    .collage { gap: 10px 8px; }
+    .torn { left: -12px; width: 100px; }
+    table.roster { font-size: 14px; }
+    table.roster td, table.roster th { padding: 6px 5px; }
+    .rev-q { font-size: 14px; }
+    .rev-a { font-size: 15px; padding: 3px 9px; }
+    .namebox { font-size: 24px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="subline" style="margin-top:70px">finding the scissors…</div></div>
+
+<script>
+/* ============================================================
+   KINDRED · quiz frontend · v1.9 (finishing pass: SVG snipping scissors, page-settle, progress squares, oracle controls, pass-it-on, pretty timestamps, decorated cover/name/review, texture, favicon+og, a11y)
+   Backend: Google Apps Script (kindred-Code.gs). Set API_URL to
+   the deployed /exec URL. Until then the site runs on the sample
+   questions below so the whole flow can be tried locally.
+   Oracle: open the site with ?key=YOUR_ORACLE_KEY to see the
+   roster of responses (stored in this browser afterwards).
+   ============================================================ */
+const API_URL = "";   // <- paste your Apps Script /exec URL between the quotes
+const TITLE = "Kindred";
+const SUBTITLE = "a quiz to find your person";
+const EXPECTED = 26;  // how many friends are invited (for the "x of y" line)
+
+const SAMPLE_QUESTIONS = [
+ {id:"q1", text:"window seat or aisle?", type:"either", options:"window|aisle", weight:"1", category:"taste"},
+ {id:"q2", text:"a free Saturday appears out of nowhere. what happens to it?", type:"choice", options:"planned to the minute|one loose plan, then vibes|I wait to be summoned|gone. don't ask.", weight:"1", category:"habits"},
+ {id:"q3", text:"sunrise person or 2 a.m. person?", type:"either", options:"sunrise|2 a.m.", weight:"1", category:"habits"},
+ {id:"q4", text:"cereal is...", type:"choice", options:"a soup|not a soup|only a soup with milk|I refuse the question", weight:"1", category:"chaos"},
+ {id:"q5", text:"how planned is your ideal trip?", type:"likert", options:"total improv|full spreadsheet", weight:"1", category:"habits"},
+ {id:"q6", text:"beach or mountains?", type:"either", options:"beach|mountains", weight:"1", category:"taste"},
+ {id:"q7", text:"your text message style:", type:"choice", options:"novels|one-liners|voice memos|emoji, mostly", weight:"1", category:"habits"},
+ {id:"q8", text:"spice tolerance:", type:"likert", options:"mild, please|call the fire department", weight:"1", category:"taste"},
+ {id:"q9", text:"text back instantly or in three business days?", type:"either", options:"instantly|three business days", weight:"1", category:"chaos"},
+ {id:"q10", text:"at a party you are usually...", type:"choice", options:"kitchen crew|dance floor|deep talk in a corner|befriending the dog", weight:"1", category:"values"},
+ {id:"q11", text:"being late:", type:"likert", options:"on time IS late|time is a suggestion", weight:"1", category:"values"},
+ {id:"q12", text:"cats or dogs?", type:"either", options:"cats|dogs", weight:"1", category:"taste"},
+ {id:"q13", text:"pick a superpower:", type:"choice", options:"fly|read minds|teleport|pause time", weight:"1", category:"chaos"},
+ {id:"q14", text:"karaoke:", type:"likert", options:"absolutely not|hand me the mic", weight:"1", category:"chaos"},
+ {id:"q15", text:"sweet or salty?", type:"either", options:"sweet|salty", weight:"1", category:"taste"},
+ {id:"q16", text:"your fridge, right now:", type:"choice", options:"meal-prepped rows|condiments only|mystery leftovers|a single beverage", weight:"1", category:"habits"},
+ {id:"q17", text:"horror movies:", type:"likert", options:"never|the scarier the better", weight:"1", category:"taste"},
+ {id:"q18", text:"plan the group trip or get dragged along?", type:"either", options:"I'm the planner|drag me", weight:"1", category:"values"},
+ {id:"q19", text:"ideal weather:", type:"choice", options:"crisp fall day|summer thunderstorm|snow day|relentless sun", weight:"1", category:"taste"},
+ {id:"q20", text:"board games:", type:"likert", options:"it's just a game|I will flip this table", weight:"1", category:"values"},
+ {id:"q21", text:"book the flight or read 400 reviews first?", type:"either", options:"book it|400 reviews", weight:"1", category:"chaos"},
+ {id:"q22", text:"your alarm situation:", type:"choice", options:"one alarm, up instantly|five alarms, all ignored|no alarm, trust the sun|what is sleep", weight:"1", category:"habits"},
+ {id:"q23", text:"small talk:", type:"likert", options:"genuinely delightful|physically painful", weight:"1", category:"values"},
+ {id:"q24", text:"pick a dinner guest:", type:"choice", options:"a comedian|a philosopher|a chef|someone's dog", weight:"1", category:"values"}
+];
+
+let QUESTIONS = [];
+let COUNT = 0;
+let RESPONSES = null;      // oracle only
+let SAMPLE = false;
+let screen = "cover";      // cover | name | q | review | sealed | oracle | error
+let idx = 0;
+let NAME = "";
+let ANSWERS = {};
+let fromReview = false;
+let submitState = "";      // "" | "sending" | error text
+let loadError = "";
+const ADVANCE_MS = 240;
+let advanceTimer = null;
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function opts(q) { return String(q.options || "").split("|").map(s => s.trim()).filter(Boolean); }
+
+/* ---------- draft (autosave to this browser) ---------- */
+function saveDraft() {
+  try { localStorage.setItem("kindred_draft", JSON.stringify({ name: NAME, answers: ANSWERS, idx: idx })); } catch (e) {}
+}
+function loadDraft() {
+  try { return JSON.parse(localStorage.getItem("kindred_draft") || "null"); } catch (e) { return null; }
+}
+function clearDraft() { try { localStorage.removeItem("kindred_draft"); } catch (e) {} }
+function draftHasProgress(d) { return !!(d && (String(d.name || "").trim() || Object.keys(d.answers || {}).length)); }
+
+/* ---------- load ---------- */
+function oracleKey() {
+  try {
+    const p = new URLSearchParams(window.location.search).get("key");
+    if (p) localStorage.setItem("kindred_key", p);
+    return p || localStorage.getItem("kindred_key") || "";
+  } catch (e) { return ""; }
+}
+
+async function init() {
+  const key = oracleKey();
+  if (!API_URL) {
+    SAMPLE = true; QUESTIONS = SAMPLE_QUESTIONS; COUNT = 14;
+    screen = "cover"; render(); return;
+  }
+  try {
+    const res = await fetch(API_URL + (key ? "?key=" + encodeURIComponent(key) : ""));
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "backend said no");
+    QUESTIONS = data.questions || [];
+    COUNT = data.response_count || 0;
+    if (data.oracle) { RESPONSES = data.responses || []; screen = "oracle"; }
+    else screen = "cover";
+  } catch (err) {
+    loadError = String(err && err.message ? err.message : err);
+    screen = "error";
+  }
+  render();
+}
+
+/* ---------- screens ---------- */
+function cutTitle(word) {
+  const colors = ["var(--pink)", "var(--yellow)", "var(--teal)", "var(--lilac)", "var(--peach)", "var(--green)"];
+  const rots = [-4, 3, -2, 4, -3, 2];
+  let k = 0;
+  return word.split("").map(ch => {
+    if (ch === " ") return `<span class="cutspace"></span>`;
+    const html = `<span class="cut" style="background:${colors[k % 6]};transform:rotate(${rots[k % 6]}deg)">${esc(ch)}</span>`;
+    k++; return html;
+  }).join("");
+}
+function bannerHtml() {
+  return SAMPLE ? `<div class="banner">sample questions · paste your backend /exec URL into API_URL to go live</div>` : "";
+}
+
+function coverHtml() {
+  const d = loadDraft();
+  const resume = draftHasProgress(d) ? `<button class="backlink" data-action="resume">or pick up where you left off (${Object.keys(d.answers || {}).length} answered)</button>` : "";
+  const countline = COUNT <= 0 ? `be the first of ${EXPECTED} to finish`
+    : (COUNT >= EXPECTED ? `${COUNT} friends have finished` : `${COUNT} of ${EXPECTED} friends have finished`);
+  const oracleBack = RESPONSES !== null ? `<div class="center"><button class="backlink" data-action="oracle-back">← back to the matchmaker view</button></div>` : "";
+  return `${bannerHtml()}
+    <div class="titleline">${cutTitle(TITLE)}</div>
+    <div class="subline">${esc(SUBTITLE)}</div>
+    <div class="countline">${countline}</div>
+    <div class="card">
+      <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+      <div class="torn" aria-hidden="true"></div>
+      ${cardDecos(1)}
+      <div class="q">24-ish questions. no wrong answers. at the party, find out who answered most like you.</div>
+      <div class="hintline">one sitting, about five minutes. your answers are sealed until the party. have fun :)</div>
+      <button class="next" data-action="start">start →</button>
+      <div class="center">${resume}</div>
+    </div>
+    ${oracleBack}
+    <div class="footer">made with scissors &amp; glue</div>`;
+}
+
+function nameHtml() {
+  return `${bannerHtml()}
+    <div class="titleline">${cutTitle(TITLE)}</div>
+    <div class="card tilt2">
+      <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+      <div class="torn t2" aria-hidden="true"></div>
+      ${cardDecos(2)}
+      <span class="deco" aria-hidden="true" style="right:16px;top:44%;transform:rotate(64deg)">${doodleSvg("arrow","#b3532f")}</span>
+      <div class="qnum">first things first</div>
+      <div class="q">your name?</div>
+      <input class="namebox" id="name-input" maxlength="60" value="${esc(NAME)}" autocomplete="off" placeholder="write it here">
+      <div class="hintline">the one your friends actually call you — it's how your match finds you.</div>
+      <button class="next" data-action="name-next">next page →</button>
+    </div>`;
+}
+
+function qHtml() {
+  const q = QUESTIONS[idx];
+  const chosen = ANSWERS[q.id];
+  const o = opts(q);
+  let optsHtml = "";
+  if (q.type === "likert") {
+    optsHtml = `<div class="opts likert">` +
+      [1,2,3,4,5].map(v => `<button class="opt ${String(chosen)===String(v)?"sel":""}" data-opt="${v}" aria-label="${v} of 5${o[0]&&o[1]?" ("+esc(o[0])+" to "+esc(o[1])+")":""}">${v}</button>`).join("") +
+      `</div><div class="anchors"><span>${esc(o[0]||"")}</span><span>${esc(o[1]||"")}</span></div>`;
+  } else {
+    optsHtml = `<div class="opts ${q.type==="either"?"either":""}">` +
+      o.map((t,i) => `<button class="opt ${chosen===t?"sel":""}" data-opt-i="${i}">${esc(t)}</button>`).join("") +
+      `</div>`;
+  }
+  return `${bannerHtml()}
+    <div class="card ${idx%2?"tilt2":""}">
+      <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+      ${idx%2 ? `<div class="torn t2" aria-hidden="true"></div>` : `<div class="torn" aria-hidden="true"></div>`}
+      ${cardDecos(idx)}
+      <div class="qnum">page ${idx+1} of ${QUESTIONS.length}${q.category?` · ${esc(q.category)}`:""}</div>
+      <div class="q">${esc(q.text)}</div>
+      ${optsHtml}
+    </div>
+    ${progSquares()}
+    <div class="prog">${idx+1} of ${QUESTIONS.length} ✂</div>
+    <div class="center"><button class="backlink" data-action="back">← ${fromReview ? "back to read-through" : (idx===0 ? "back to name" : "previous page")}</button></div>`;
+}
+
+function shortQ(t) { t = String(t); return t.length > 46 ? t.slice(0, 44) + "…" : t; }
+
+/* ---------- decorations ---------- */
+// consistent hand-drawn scissors on every device; blades open/close via CSS while it travels
+function scissorSvg() {
+  return `<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+    <g class="b1"><path d="M25 6 L11 13 L5 19" fill="none" stroke="var(--dark)" stroke-width="2.4" stroke-linecap="round"/><circle cx="4" cy="20" r="3" fill="none" stroke="var(--dark)" stroke-width="2"/></g>
+    <g class="b2"><path d="M25 20 L11 13 L5 7" fill="none" stroke="var(--dark)" stroke-width="2.4" stroke-linecap="round"/><circle cx="4" cy="6" r="3" fill="none" stroke="var(--dark)" stroke-width="2"/></g>
+    <circle cx="11" cy="13" r="1.6" fill="var(--dark)"/>
+  </svg>`;
+}
+// sheet timestamps may come back as date-object strings; show them as "Jul 1 · 10:04"
+function tsPretty(s) {
+  s = String(s || "").trim();
+  const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (m) return MN[+m[2] - 1] + " " + (+m[3]) + " · " + m[4] + ":" + m[5];
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    const h = String(d.getHours()).padStart(2, "0"), mi = String(d.getMinutes()).padStart(2, "0");
+    return MN[d.getMonth()] + " " + d.getDate() + " · " + h + ":" + mi;
+  }
+  return s.slice(0, 20);
+}
+// progress: one little paper square per page, filling in as you go
+function progSquares() {
+  return `<div class="progrow" aria-hidden="true">` + QUESTIONS.map((q, i) =>
+    `<span class="pg ${i <= idx ? "done" : ""}"${i <= idx ? ` style="background:${SHAPE_COLORS[i % 6]}"` : ""}></span>`
+  ).join("") + `</div>`;
+}
+const SHAPE_COLORS = ["var(--pink)", "var(--yellow)", "var(--teal)", "var(--lilac)", "var(--peach)", "var(--green)"];
+function seedFrom(s) { let h = 2166136261; s = String(s || "friend"); for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { let a = seed || 1; return function () { a = Math.imul(a ^ (a >>> 15), a | 1); a ^= a + Math.imul(a ^ (a >>> 7), a | 61); return ((a ^ (a >>> 14)) >>> 0) / 4294967296; }; }
+
+// hand-drawn pen doodles. kinds: star heart spiral arrow sparkle loop
+function doodleSvg(kind, col) {
+  const paths = {
+    star:    `M15 3 L18 12 L27 12 L20 18 L23 27 L15 21 L7 27 L10 18 L3 12 L12 12 Z`,
+    heart:   `M15 25 C6 18 3 12 6 8 C9 4 14 6 15 10 C16 6 21 4 24 8 C27 12 24 18 15 25 Z`,
+    spiral:  `M15 15 a2 2 0 0 1 4 0 a4 4 0 0 1 -8 0 a6 6 0 0 1 12 0 a8 8 0 0 1 -16 0`,
+    arrow:   `M4 22 C10 10 18 8 24 12 M24 12 l-6 -1 M24 12 l-2 5`,
+    sparkle: `M15 4 L17 13 L26 15 L17 17 L15 26 L13 17 L4 15 L13 13 Z`,
+    loop:    `M3 15 C7 5 11 25 15 15 C19 5 23 25 27 15`
+  };
+  return `<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="${paths[kind] || paths.star}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+// which doodle goes with this question. Takes the question on purpose:
+// today it ignores it; later, specific questions can get specific doodles here.
+function doodleFor(q, i, rand) {
+  const kinds = ["star", "heart", "spiral", "arrow", "sparkle", "loop"];
+  const inks = ["#3f3a30", "#3f3a30", "#b3532f", "#4a5f8f"];
+  return doodleSvg(kinds[Math.floor(rand() * kinds.length)], inks[Math.floor(rand() * inks.length)]);
+}
+// cut-out shapes peeking around the question card; four arrangements cycle by page
+function cardDecos(i) {
+  const c = k => SHAPE_COLORS[(i + k) % 6];
+  const s = (cls, style) => `<span class="deco ${cls}" aria-hidden="true" style="${style}"></span>`;
+  const v = i % 4;
+  if (v === 0) return s("deco-star", `width:38px;height:38px;top:-16px;right:28px;background:${c(0)};transform:rotate(12deg)`)
+    + s("deco-dot", `width:20px;height:20px;bottom:34px;left:-10px;background:${c(2)}`)
+    + s("deco-zig", `width:78px;height:16px;bottom:-8px;right:44px;background:${c(4)};transform:rotate(-4deg)`);
+  if (v === 1) return s("deco-tri", `width:30px;height:26px;top:-12px;left:38px;background:${c(1)};transform:rotate(-9deg)`)
+    + s("deco-star", `width:30px;height:30px;bottom:-13px;left:-8px;background:${c(3)};transform:rotate(-14deg)`)
+    + s("deco-dot", `width:16px;height:16px;top:44%;right:-8px;background:${c(5)}`);
+  if (v === 2) return s("deco-zig", `width:70px;height:15px;top:-7px;left:26%;background:${c(2)};transform:rotate(3deg)`)
+    + s("deco-dot", `width:24px;height:24px;bottom:-10px;right:-9px;background:${c(0)}`)
+    + s("deco-tri", `width:26px;height:22px;left:-11px;top:30%;background:${c(4)};transform:rotate(18deg)`);
+  return s("deco-star", `width:34px;height:34px;bottom:-14px;right:30%;background:${c(5)};transform:rotate(9deg)`)
+    + s("deco-dot", `width:14px;height:14px;top:-6px;right:-6px;background:${c(1)}`)
+    + s("deco-zig", `width:64px;height:15px;left:-14px;bottom:26%;background:${c(3)};transform:rotate(86deg)`);
+}
+// small shape or doodle sprinkled between collage scraps
+function collageDeco(rand, delayIdx) {
+  const d = `animation-delay:${delayIdx * 50}ms`;
+  if (rand() < 0.45) {
+    return `<span class="cdeco" aria-hidden="true" style="${d};transform:rotate(${Math.round(rand() * 30 - 15)}deg)">${doodleFor(null, delayIdx, rand)}</span>`;
+  }
+  const cls = ["deco-star", "deco-dot", "deco-tri", "deco-zig"][Math.floor(rand() * 4)];
+  const w = cls === "deco-zig" ? 44 + rand() * 26 : 16 + rand() * 16;
+  const h = cls === "deco-zig" ? 12 : w;
+  const col = SHAPE_COLORS[Math.floor(rand() * 6)];
+  return `<span class="cdeco ${cls}" aria-hidden="true" style="${d};width:${Math.round(w)}px;height:${Math.round(h)}px;background:${col};transform:rotate(${Math.round(rand() * 40 - 20)}deg)"></span>`;
+}
+function reviewHtml() {
+  const rows = QUESTIONS.map((q, i) => {
+    const a = q.type === "likert" ? `${esc(ANSWERS[q.id])} / 5` : esc(ANSWERS[q.id] || "");
+    return `<div class="rev-row" data-jump="${i}"><div class="rev-q">${esc(shortQ(q.text))}</div><div class="rev-a">${a}</div></div>`;
+  }).join("");
+  const note = submitState && submitState !== "sending" ? `<div class="errscrap">${esc(submitState)}</div>` : "";
+  const btnLabel = submitState === "sending" ? "gluing it down…" : "seal my envelope";
+  return `${bannerHtml()}
+    <div class="titleline">${cutTitle("read it back")}</div>
+    <div class="subline">tap any line to change it — this is the last look before it's sealed, ${esc(NAME)}.</div>
+    <div class="card">
+      <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+      ${cardDecos(3)}
+      ${rows}
+      ${note}
+      <button class="next" data-action="submit" ${submitState==="sending"?"disabled":""}>${btnLabel}</button>
+    </div>`;
+}
+
+function sealedHtml() {
+  const rand = rng(seedFrom(NAME));               // each person's page is scattered their own stable way
+  const items = [];
+  QUESTIONS.forEach((q, i) => {
+    if (i > 0 && rand() < 0.45) items.push(collageDeco(rand, items.length));
+    const rot = (rand() * 12 - 6).toFixed(1);
+    const dy = Math.round(rand() * 14 - 7);
+    const fs = (14 + rand() * 3).toFixed(1);
+    const mx = Math.round(rand() * 8);
+    const a = q.type === "likert" ? `${esc(ANSWERS[q.id])} / 5` : esc(ANSWERS[q.id] || "");
+    items.push(`<div class="c-scrap" style="animation-delay:${items.length * 50}ms;font-size:${fs}px;margin:0 ${mx}px;transform:rotate(${rot}deg) translateY(${dy}px)"><span class="c-q">${esc(shortQ(q.text))}</span>${a}</div>`);
+  });
+  items.push(collageDeco(rand, items.length));
+  return `${bannerHtml()}
+    <div class="subline">your envelope is sealed. it opens at the party, next to the person who answered most like you.</div>
+    <div class="cpage">
+      <div class="seal-sticker seal-abs">SEALED ✂</div>
+      <span class="deco deco-zig" style="width:86px;height:16px;top:-8px;left:24px;background:var(--teal);transform:rotate(-3deg)"></span>
+      <span class="deco deco-star" style="width:36px;height:36px;bottom:-15px;left:-10px;background:var(--yellow);transform:rotate(-12deg)"></span>
+      <span class="deco deco-dot" style="width:18px;height:18px;bottom:40%;right:-8px;background:var(--pink)"></span>
+      <div class="titleline ${NAME.length > 12 ? "small" : ""}">${cutTitle(NAME || "you")}</div>
+      <div class="c-date">sealed ${sealDate()}</div>
+      <div class="collage">${items.join("")}</div>
+    </div>
+    <div class="center"><button class="backlink" data-action="again">done — pass it to the next friend</button></div>
+    <div class="footer">made with scissors &amp; glue</div>`;
+}
+
+function errorHtml() {
+  return `<div class="titleline">${cutTitle(TITLE)}</div>
+    <div class="card center">
+      <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+      <div class="q">the glue didn't hold.</div>
+      <div class="errscrap">couldn't reach the backend: ${esc(loadError)}</div>
+      <button class="next" data-action="retry">try again</button>
+    </div>`;
+}
+
+function oracleHtml() {
+  const norm = s => String(s||"").trim().toLowerCase().replace(/\s+/g, " ");
+  const seen = {};
+  (RESPONSES||[]).forEach(r => { const n = norm(r.name); seen[n] = (seen[n]||0) + 1; });
+  const rows = (RESPONSES||[]).map(r => {
+    const dup = seen[norm(r.name)] > 1 ? `<span class="dupe">duplicate — latest will be kept</span>` : "";
+    return `<tr><td>${esc(r.name)}</td><td>${esc(tsPretty(r.timestamp))}</td><td>${dup}</td></tr>`;
+  }).join("");
+  return `<div class="titleline">${cutTitle("the matchmaker")}</div>
+    <div class="subline">${(RESPONSES||[]).length} of ${EXPECTED} envelopes returned</div>
+    <div class="card">
+      <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+      <table class="roster"><tr><th>name</th><th>returned</th><th></th></tr>${rows || `<tr><td colspan="3">nothing yet — send the link around.</td></tr>`}</table>
+      <div class="hintline">answers stay in the sheet; this view is just the roster. the matching console (similarity, pairings, reveal night) is the next build.</div>
+      <button class="next" data-action="oracle-refresh">refresh the roster</button>
+      <div class="center"><button class="backlink" data-action="oracle-quiz">open the quiz on this device</button></div>
+    </div>`;
+}
+
+function render() {
+  const app = document.getElementById("app");
+  if (screen === "cover") app.innerHTML = coverHtml();
+  else if (screen === "name") app.innerHTML = nameHtml();
+  else if (screen === "q") app.innerHTML = qHtml();
+  else if (screen === "review") app.innerHTML = reviewHtml();
+  else if (screen === "sealed") app.innerHTML = sealedHtml();
+  else if (screen === "oracle") app.innerHTML = oracleHtml();
+  else if (screen === "error") app.innerHTML = errorHtml();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- actions ---------- */
+function startQuiz() { screen = "name"; render(); }
+function resumeQuiz() {
+  const d = loadDraft();
+  if (d) { NAME = String(d.name||""); ANSWERS = d.answers || {}; idx = Math.min(d.idx||0, QUESTIONS.length-1); }
+  screen = NAME.trim() ? "q" : "name"; render();
+}
+function nameNext() {
+  const el = document.getElementById("name-input");
+  NAME = String((el && el.value) || "").trim().slice(0, 60);
+  if (!NAME) { render(); const e2 = document.getElementById("name-input"); if (e2) e2.placeholder = "we do need a name!"; return; }
+  saveDraft(); screen = "q"; idx = firstUnanswered(); fromReview = false; render();
+}
+function firstUnanswered() {
+  for (let i = 0; i < QUESTIONS.length; i++) if (!String(ANSWERS[QUESTIONS[i].id] || "").trim()) return i;
+  return QUESTIONS.length - 1;
+}
+function reducedMotion() {
+  try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; }
+}
+// a scissor travels vertically through a rejected option at a random point along its
+// length (from the top or the bottom), then it falls apart in two unequal jagged pieces
+function cutOption(o, delay) {
+  setTimeout(function () { try {
+    const r = o.getBoundingClientRect();
+    const cut = 0.28 + Math.random() * 0.44;             // where along its length this one gets cut
+    const cutX = r.left + cut * r.width;
+    const fromTop = Math.random() < 0.5;
+    const sc = document.createElement("span");
+    sc.className = "scissor"; sc.innerHTML = scissorSvg();
+    if (sc.setAttribute) sc.setAttribute("aria-hidden", "true");
+    sc.style.left = (cutX - 13) + "px";
+    sc.style.top = (fromTop ? r.top - 26 : r.bottom + 4) + "px";
+    sc.style.setProperty("--dt", (fromTop ? (r.height + 32) : -(r.height + 32)) + "px");
+    sc.style.setProperty("--rot", fromTop ? "90deg" : "-90deg");
+    document.body.appendChild(sc);
+    setTimeout(function () { try { sc.remove(); } catch (e) {} }, 700);
+    setTimeout(function () { try {
+      o.style.visibility = "hidden";
+      const bg = (typeof getComputedStyle === "function") ? getComputedStyle(o).backgroundColor : "#fde3a7";
+      const c = cut * 100;
+      const u = 100 / r.width;                            // 1px expressed in % of this option's width
+      const j = function (k) { return Math.max(1, Math.min(99, c + k * u)).toFixed(1); };
+      // outer edges keep the scrap's torn outline; only the seam is the fresh cut
+      const leftPoly = "polygon(0 12%, 4% 0, " + j(5) + "% 2%, " + j(-3) + "% 14%, " + j(6) + "% 28%, " + j(-4) + "% 44%, " +
+        j(5) + "% 58%, " + j(-3) + "% 74%, " + j(5) + "% 88%, " + j(0) + "% 98%, 5% 97%, 0 86%)";
+      const rightPoly = "polygon(" + j(5) + "% 2%, 96% 4%, 100% 16%, 99% 88%, 95% 100%, " + j(0) + "% 98%, " + j(5) + "% 88%, " +
+        j(-3) + "% 74%, " + j(5) + "% 58%, " + j(-4) + "% 44%, " + j(6) + "% 28%, " + j(-3) + "% 14%)";
+      [["lefthalf", leftPoly], ["righthalf", rightPoly]].forEach(function (pair) {
+        const half = o.cloneNode(true);
+        half.className = "opt cuthalf " + pair[0];
+        half.style.cssText = "position:fixed;left:" + r.left + "px;top:" + r.top + "px;width:" + r.width +
+          "px;height:" + r.height + "px;margin:0;transform:none;background:" + bg + ";z-index:4;clip-path:" + pair[1] + ";";
+        document.body.appendChild(half);
+        setTimeout(function () { try { half.remove(); } catch (e) {} }, 1200);
+      });
+    } catch (e) {} }, 300);                              // pieces separate right as the scissor clears
+  } catch (e) {} }, delay);
+}
+// a wavy line of school glue draws itself where the scrap will land
+function drawGlue(r) {
+  try {
+    const NS = "http://www.w3.org/2000/svg";
+    const w = Math.max(40, r.width - 20);
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("class", "glue-svg");
+    svg.setAttribute("width", w); svg.setAttribute("height", 16);
+    svg.style.left = (r.left + 10) + "px";
+    svg.style.top = (r.top + r.height * 0.7 - 8) + "px";
+    let d = "M3 8", up = true;
+    for (let x = 3; x < w - 3; x += 16) {
+      const nx = Math.min(w - 3, x + 16);
+      d += " Q " + (x + 8) + " " + (up ? 1 : 15) + ", " + nx + " 8";
+      up = !up;
+    }
+    [["#c9d6e2", 7, 0.55], ["#e9eff6", 5, 0.95]].forEach(function (spec) {
+      const p = document.createElementNS(NS, "path");
+      p.setAttribute("d", d); p.setAttribute("fill", "none");
+      p.setAttribute("stroke", spec[0]); p.setAttribute("stroke-width", spec[1]);
+      p.setAttribute("stroke-linecap", "round"); p.setAttribute("opacity", spec[2]);
+      svg.appendChild(p);
+    });
+    document.body.appendChild(svg);
+    Array.prototype.forEach.call(svg.childNodes, function (p) { try {
+      const L = p.getTotalLength();
+      p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+      p.getBoundingClientRect();                       // force layout so the transition runs
+      p.style.transition = "stroke-dashoffset 640ms ease-out";
+      p.style.strokeDashoffset = "0";
+    } catch (e) {} });
+    // evaporate fully before contact: fade 1.42-1.58s, card lands 1.61s
+    setTimeout(function () { try { svg.style.transition = "opacity 160ms ease-out"; svg.style.opacity = "0"; } catch (e) {} }, 720);
+    setTimeout(function () { try { svg.remove(); } catch (e) {} }, 950);
+  } catch (e) {}
+}
+// glue squeezing out from under the edges at impact
+function spawnGlobs(r) {
+  try {
+    const fr = [0.06, 0.28, 0.52, 0.78, 0.97];
+    for (let i = 0; i < fr.length; i++) {
+      const g = document.createElement("span");
+      g.className = "glob";
+      const x = r.left + fr[i] * r.width;
+      const size = 8 + Math.random() * 6;
+      g.style.width = size + "px"; g.style.height = (size * 0.8) + "px";
+      g.style.left = x + "px"; g.style.top = (r.bottom - 8) + "px";
+      const out = (fr[i] < 0.5 ? -1 : 1) * (6 + Math.random() * 10);
+      g.style.setProperty("--dx", Math.round(out) + "px");
+      g.style.setProperty("--dy", Math.round(3 + Math.random() * 8) + "px");
+      document.body.appendChild(g);
+      setTimeout(function () { try { g.remove(); } catch (e) {} }, 900);
+    }
+  } catch (e) {}
+}
+// the whole gesture; returns its duration, or 0 if this environment can't animate
+function animatePick(el) {
+  try {
+    const group = el.closest(".opts");
+    if (!group || !group.querySelectorAll) return 0;
+    group.style.pointerEvents = "none";                // one choice per page; no mid-air re-picks
+    const others = Array.prototype.filter.call(group.querySelectorAll(".opt"), function (o) { return o !== el; });
+    others.forEach(function (o, i) { cutOption(o, Math.min(i * 120, 360)); });
+    el.classList.add("lift2");                          // beat 1 (0-0.9s): lift; scissors do their work
+    const rect = el.getBoundingClientRect();
+    setTimeout(function () { drawGlue(rect); }, 700);   // beat 2 (0.7-1.35s): glue draws, unhurried
+    setTimeout(function () { try { el.classList.remove("lift2"); el.classList.add("splat"); } catch (e) {} }, 1450);
+    setTimeout(function () { spawnGlobs(rect); }, 1600); // beat 3: impact — splat lands, glue squishes out
+    return 1880;
+  } catch (e) { return 0; }
+}
+function pick(value, el) {
+  const q = QUESTIONS[idx];
+  ANSWERS[q.id] = String(value);
+  saveDraft();
+  if (advanceTimer) clearTimeout(advanceTimer);
+  let dur = 0;
+  if (el && !reducedMotion()) dur = animatePick(el);
+  if (!dur) { render(); advanceTimer = setTimeout(advance, 200); return; }
+  advanceTimer = setTimeout(advance, dur);
+}
+function advance() {
+  advanceTimer = null;
+  if (fromReview) { fromReview = false; screen = "review"; render(); return; }
+  if (idx < QUESTIONS.length - 1) { idx++; render(); }
+  else { screen = "review"; submitState = ""; render(); }
+}
+function goBack() {
+  if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
+  if (fromReview) { fromReview = false; screen = "review"; render(); return; }
+  if (idx === 0) { screen = "name"; render(); return; }
+  idx--; render();
+}
+function jumpTo(i) {
+  if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
+  idx = i; fromReview = true; screen = "q"; render();
+}
+
+function sealDate() {
+  const M = ["january","february","march","april","may","june","july","august","september","october","november","december"];
+  const d = new Date();
+  return M[d.getMonth()] + " " + d.getDate();
+}
+function restartQuiz() {
+  NAME = ""; ANSWERS = {}; idx = 0; fromReview = false; submitState = "";
+  clearDraft(); screen = "cover"; render();
+}
+
+async function submit() {
+  if (SAMPLE) { screen = "sealed"; render(); return; }   // preview the collage; banner notes nothing is saved
+  const missing = QUESTIONS.filter(q => !String(ANSWERS[q.id] || "").trim());
+  if (missing.length) { submitState = "a page is blank: " + missing.map(q=>q.id).join(", "); render(); return; }
+  submitState = "sending"; render();
+  try {
+    const res = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ name: NAME, answers: ANSWERS }) });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "the backend said no");
+    clearDraft(); screen = "sealed"; render();
+  } catch (err) {
+    submitState = "didn't stick: " + String(err && err.message ? err.message : err) + " — try once more.";
+    render();
+  }
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", function (e) {
+  const t = e.target.closest("[data-action],[data-opt],[data-opt-i],[data-jump]");
+  if (!t) return;
+  if (t.dataset.action === "start") startQuiz();
+  else if (t.dataset.action === "resume") resumeQuiz();
+  else if (t.dataset.action === "name-next") nameNext();
+  else if (t.dataset.action === "back") goBack();
+  else if (t.dataset.action === "submit") submit();
+  else if (t.dataset.action === "retry") { loadError = ""; screen = "cover"; init(); }
+  else if (t.dataset.action === "again") restartQuiz();
+  else if (t.dataset.action === "oracle-refresh") init();
+  else if (t.dataset.action === "oracle-quiz") { screen = "cover"; render(); }
+  else if (t.dataset.action === "oracle-back") { screen = "oracle"; render(); }
+  else if (t.dataset.opt !== undefined) pick(t.dataset.opt, t);
+  else if (t.dataset.optI !== undefined) pick(opts(QUESTIONS[idx])[+t.dataset.optI], t);
+  else if (t.dataset.jump !== undefined) jumpTo(+t.dataset.jump);
+});
+document.addEventListener("input", function (e) {
+  if (e.target && e.target.id === "name-input") { NAME = String(e.target.value).trim().slice(0, 60); saveDraft(); }
+});
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Enter" && e.target && e.target.id === "name-input") nameNext();
+});
+
+init();
+</script>
+</body>
+</html>
